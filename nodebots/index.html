@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <title>Nodebots Playground</title>
+    <meta name="description" content="Nodebots Playground" />
+    <meta name="author" content="Rahul Thakoor" />
+    <script src="/js/ace.js"></script>
+
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+
+  <body>
+    <div class="controls">
+      <button onclick="submit()">RUN</button>
+      <button onclick="blink()">BLINK</button>
+      <button onclick="stop()">STOP</button>
+    </div>
+    <div id="wrapper">
+      <div id="editor"></div>
+      <div id="output">
+        <code id="target"></code>
+      </div>
+    </div>
+    <script src="/js/axios.js"></script>
+    <script src="/js/socket.io.js"></script>
+    <script>
+      var socket = io.connect(window.location.origin);
+      var target = document.getElementById("target");
+      var lineBreak = document.createElement("BR");
+
+      socket.on("OUTPUT", function(payload) {
+        console.log(payload);
+        if (payload.node == window.location.pathname.split("/node/")[1]) {
+          var p = document.createElement("p");
+          var node = document.createTextNode(payload.data);
+          p.appendChild(node);
+          target.appendChild(p);
+        }
+      });
+      socket.on("ERROR", function(payload) {
+        console.log(payload);
+        var p = document.createElement("p");
+        var node = document.createTextNode(payload.data);
+        var err = document.createElement("span");
+        err.setAttribute("class", "err");
+        var err_node = document.createTextNode("ERR: ");
+        err.appendChild(err_node);
+
+        p.appendChild(err);
+        p.appendChild(node);
+        target.appendChild(p);
+      });
+
+      var editor = ace.edit("editor");
+      editor.setTheme("ace/theme/monokai");
+      editor.getSession().setMode("ace/mode/javascript");
+
+      function submit() {
+        let code = editor.getValue();
+        if (code == "") {
+          return;
+        }
+        target.textContent = "";
+
+        var data = {
+          node: window.location.pathname.split("/node/")[1],
+          code: code
+        };
+
+        socket.emit("RUN", data);
+      }
+
+      function blink() {
+        editor.setValue(
+          "let led = new five.Led(process.env.LED_PIN || 2);\nlet rate = process.env.BLINK_RATE || 500;\nconsole.log(`Blinking at ${rate} ms ...`);\nled.blink(rate);"
+        );
+        submit();
+      }
+
+      function stop() {
+        socket.emit("STOP", window.location.pathname.split("/node/")[1]);
+      }
+    </script>
+  </body>
+</html>

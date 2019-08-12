@@ -1,0 +1,27 @@
+#editor,
+#output {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: 5% 2%;
+  padding: 1%;
+  height: 75vh;
+  width: 50%;
+}
+#output {
+  background-color: #202020;
+  color: white;
+}
+#wrapper {
+  display: flex;
+}
+
+#target {
+  height: 100%;
+  width: 100%;
+}
+
+.err {
+  color: red;
+}
